@@ -228,7 +228,7 @@ public struct JGodotValueElement: Codable {
     public let name: String
     public let value: Int
     public let description: String?
-    
+
     public init(name: String, value: Int, description: String) {
         self.name = name
         self.value = value
@@ -244,6 +244,7 @@ public struct JGodotBuiltinClassMethod: Codable {
     public let hash: Int
     public let description: String?
     public let arguments: [JGodotArgument]?
+    public let hashCompatibility: [Int]?
 
     enum CodingKeys: String, CodingKey {
         case name
@@ -253,9 +254,10 @@ public struct JGodotBuiltinClassMethod: Codable {
         case isStatic = "is_static"
         case hash, arguments
         case description
+        case hashCompatibility = "hash_compatibility"
     }
 
-    public init(name: String, description: String, returnType: String?, isVararg: Bool, isConst: Bool, isStatic: Bool, hash: Int, arguments: [JGodotArgument]?) {
+    public init(name: String, description: String, returnType: String?, isVararg: Bool, isConst: Bool, isStatic: Bool, hash: Int, arguments: [JGodotArgument]?, hashCompatibility: [Int]?) {
         self.name = name
         self.returnType = returnType
         self.isVararg = isVararg
@@ -264,6 +266,7 @@ public struct JGodotBuiltinClassMethod: Codable {
         self.hash = hash
         self.arguments = arguments
         self.description = description
+        self.hashCompatibility = hashCompatibility
     }
 }
 
@@ -297,6 +300,7 @@ public enum JGodotArgumentMeta: String, Codable {
     case int32 = "int32"
     case int64 = "int64"
     case int8 = "int8"
+    case metaRequired = "required"
     case uint16 = "uint16"
     case uint32 = "uint32"
     case uint64 = "uint64"
@@ -470,7 +474,7 @@ public struct JGodotSignal: Codable {
 // MARK: - JGodotHeader
 public struct JGodotHeader: Codable {
     public let versionMajor, versionMinor, versionPatch: Int
-    public let versionStatus, versionBuild, versionFullName: String
+    public let versionStatus, versionBuild, versionFullName, precision: String
 
     enum CodingKeys: String, CodingKey {
         case versionMajor = "version_major"
@@ -479,15 +483,17 @@ public struct JGodotHeader: Codable {
         case versionStatus = "version_status"
         case versionBuild = "version_build"
         case versionFullName = "version_full_name"
+        case precision
     }
 
-    public init(versionMajor: Int, versionMinor: Int, versionPatch: Int, versionStatus: String, versionBuild: String, versionFullName: String) {
+    public init(versionMajor: Int, versionMinor: Int, versionPatch: Int, versionStatus: String, versionBuild: String, versionFullName: String, precision: String) {
         self.versionMajor = versionMajor
         self.versionMinor = versionMinor
         self.versionPatch = versionPatch
         self.versionStatus = versionStatus
         self.versionBuild = versionBuild
         self.versionFullName = versionFullName
+        self.precision = precision
     }
 }
 
