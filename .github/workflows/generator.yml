@@ -34,6 +34,7 @@ jobs:
         filters: |
           generator:
             - 'Generator/**'
+            - '.github/workflows/generator.yml'
 
   # JOB to run the diff - only runs if changes were detected in Generator/
   diff-generator:
