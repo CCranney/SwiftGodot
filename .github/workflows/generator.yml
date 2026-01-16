@@ -7,6 +7,7 @@ name: Generator
 on:
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-diff
@@ -23,6 +24,9 @@ jobs:
     outputs:
       generator: ${{ steps.filter.outputs.generator }}
     steps:
+
+    - name: Checkout
+      uses: actions/checkout@v4
     # For pull requests it's not necessary to checkout the code
     - uses: dorny/paths-filter@v3
       id: filter
@@ -30,12 +34,11 @@ jobs:
         filters: |
           generator:
             - 'Generator/**'
-            - '.github/workflows/generator.yml'
 
   # JOB to run the diff - only runs if changes were detected in Generator/
   diff-generator:
     needs: changes
-    if: ${{ needs.changes.outputs.generator == 'true' }}
+    if: ${{ needs.changes.outputs.generator == 'true' || github.event_name == 'workflow_dispatch' }}
     runs-on: macos-26
 
     steps:
@@ -57,10 +60,8 @@ jobs:
     - name: Build This Branch
       run: swift build --target SwiftGodot --scratch-path .build/New
     - name: Checkout Target Branch
-      run: git checkout ${{ github.event.pull_request.base.sha }}
+      run: git checkout ${{ github.event.pull_request.base.sha || 'main' }} 
     - name: Build Target Branch
       run: swift build --target SwiftGodot --scratch-path .build/Old
     - name: Diff generated
       run: diff --recursive --color=auto --minimal .build/New/plugins/outputs/swiftgodot/SwiftGodot/destination/CodeGeneratorPlugin/ .build/Old/plugins/outputs/swiftgodot/SwiftGodot/destination/CodeGeneratorPlugin/ | sed -e 's/diff\(.*\)\/\(.*\).swift/\n\2.swift:/'
-
-
