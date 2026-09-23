@@ -43,7 +43,7 @@ func makeDefaultInit (godotType: String, initCollection: String = "") -> String 
     case let e where e.starts (with: "bitfield::"):
         let simple = SimpleType (type: godotType, meta: nil)
         return "\(getGodotType (simple)) ()"
-   
+
     case let other where builtinGodotTypeNames [other] != nil:
         return "\(godotType) ()"
     case "void*", "const Glyph*":
@@ -117,7 +117,7 @@ func generateVirtualProxy (_ p: Printer,
         for arg in method.arguments ?? [] {
             if argCall != "" { argCall += ", " }
             let argName = escapeSwift (snakeToCamel (arg.name))
-            
+
             // Drop the first argument name for methods whose name already include the argument
             // name, like 'setMultiplayerPeer (peer: ..)' becomes 'setMultiplayerPeer (_ peer: ...)'
             if i > 0 || !method.name.hasSuffix("_\(arg.name)") {
@@ -320,9 +320,9 @@ func generateMethods (_ p: Printer,
                       usedMethods: Set<String>,
                       asSingleton: Bool) -> [String:(String, JGodotClassMethod)] {
     p ("/* Methods */")
-    
+
     var virtuals: [String:(String, JGodotClassMethod)] = [:]
-   
+
     for method in methods {
         performExplaniningNonCriticalErrors {
             if let virtualMethodName = try generateMethod (p, method: method, className: cdef.name, cdef: cdef, usedMethods: usedMethods, generatedMethodKind: .classMethod, asSingleton: asSingleton) {
@@ -330,7 +330,7 @@ func generateMethods (_ p: Printer,
             }
         }
     }
-    
+
     if virtuals.count > 0 {
         p ("@_spi(SwiftGodotRuntimePrivate) open override class func getVirtualDispatcher(name: StringName) -> GDExtensionClassCallVirtual?"){
             p ("guard implementedOverrides().contains(name) else { return nil }")
@@ -351,7 +351,7 @@ func generateConstants (_ p: Printer,
                         cdef: JGodotExtensionAPIClass,
                         _ constants: [JGodotValueElement]) {
     p ("/* Constants */")
-    
+
     for constant in constants {
         doc (p, cdef, constant.description)
         p ("public static let \(snakeToCamel (constant.name)) = \(constant.value)")
@@ -382,7 +382,7 @@ func generateProperties (_ p: Printer,
             }
             if let there = cdef.methods?.first (where: { $0.name == name }) {
                 //print ("Congrats, found a method that was previously missing!")
-                
+
                 // Now, if the parent class has a property referencing this,
                 // we use the mapped name, otherwise, we use the raw name
                 if cdef.properties?.contains(where: { $0.getter == there.name || $0.setter == there.name }) ?? false {
@@ -399,10 +399,14 @@ func generateProperties (_ p: Printer,
             }
         }
     }
-    
+
     for property in properties {
         var type: String?
-    
+
+        if property.name == "id" { // BANDAID HACK
+            continue
+        }
+
         // Ignore properties that only have getters, just let the setter
         // method be surfaced instead
         if property.getter == "" {
@@ -424,7 +428,7 @@ func generateProperties (_ p: Printer,
 //            continue
 //        }
         let loc = "\(cdef.name).\(property.name)"
-        
+
         var getterName = property.getter
         var gettterArgName = ""
         guard let method = findMethod (forProperty: property, startAt: cdef, name: property.getter, resolvedName: &getterName, argName: &gettterArgName) else {
@@ -460,11 +464,11 @@ func generateProperties (_ p: Printer,
         let godotReturnTypeIsReferenceType = classMap [godotReturnType ?? ""] != nil
 
         let propertyOptional = godotReturnType == "Variant" || (godotReturnTypeIsReferenceType && method.returnValue?.meta != .required)
-        
+
         // Lookup the type from the method, not the property,
         // sometimes the method is a GString, but the property is a StringName
         type = getGodotType (method.returnValue) + (propertyOptional ? "?" : "")
-        
+
 
         // Ok, we have an indexer, this means we call the property with an int
         // but we need the type from the method
@@ -479,7 +483,7 @@ func generateProperties (_ p: Printer,
         } else {
             access = ""
         }
-        
+
         if property.description != "" {
             doc (p, cdef, property.description)
         }
@@ -532,13 +536,13 @@ func generateSignals (_ p: Printer,
                       signals: [JGodotSignal]) {
     p ("// Signals ")
     var parameterSignals: [JGodotSignal] = []
-    
+
     for signal in signals {
         let signalProxyType: String
         let lambdaSig: String
         if signal.arguments != nil {
             parameterSignals.append (signal)
-            
+
             signalProxyType = getSignalType(signal)
             lambdaSig = " \(getSignalLambdaArgs(signal)) in"
         } else {
@@ -546,7 +550,7 @@ func generateSignals (_ p: Printer,
             lambdaSig = ""
         }
         let signalName = godotMethodToSwift (signal.name)
-        
+
         doc (p, cdef, signal.description)
         p ("///")
         doc (p, cdef, "To connect to this signal, reference this property and call the\n`connect` method with the method you want to invoke\n")
@@ -564,19 +568,22 @@ func generateSignals (_ p: Printer,
 func getSignalType(_ signal: JGodotSignal) -> String {
     var argTypes: [String] = []
     for signalArgument in signal.arguments ?? [] {
-        let godotType = getGodotType(signalArgument)        
+        let godotType = getGodotType(signalArgument)
         if !godotType.isEmpty && godotType != "Variant" {
             var t = godotType
+            if t.contains(".") {
+                t = "Int64"
+            }
             if !isCoreType(name: t) && !isPrimitiveType(name: signalArgument.type) {
                 t += "?"
             }
             argTypes.append(t)
         }
     }
-                
+
     return argTypes.isEmpty ? "SimpleSignal" : "SignalWithArguments<\(argTypes.joined(separator: ", "))>"
  }
-        
+
 /// Return the names of a signal's parameters,
 /// for use in documenting the corresponding lambda.
 func getSignalLambdaArgs(_ signal: JGodotSignal) -> String {
@@ -613,20 +620,20 @@ func processClass (cdef: JGodotExtensionAPIClass, outputDir: String?) async {
     // Determine if it is a singleton, but exclude EditorInterface
     let isSingleton = jsonApi.singletons.contains (where: { $0.name == cdef.name })
     let asSingleton = isSingleton && cdef.name != "EditorInterface"
-    
+
     // Clear the result
     let p = await PrinterFactory.shared.initPrinter(cdef.name, withPreamble: true)
-    
+
     // Save it
     defer {
         if let outputDir {
             p.save(outputDir + "\(cdef.name).swift")
         }
     }
-    
+
     let inherits = cdef.inherits ?? objectInherits
     let typeDecl = "open class \(cdef.name): \(inherits)"
-    
+
     var virtuals: [String: (String, JGodotClassMethod)] = [:]
     if cdef.brief_description == "" {
         if cdef.description != "" {
@@ -639,7 +646,7 @@ func processClass (cdef: JGodotExtensionAPIClass, outputDir: String?) async {
             doc (p, cdef, cdef.description)
         }
     }
-    
+
     generateSignalDocAppendix (p, cdef: cdef, signals: cdef.signals)
     // class or extension (for Object)
     p(typeDecl) {
@@ -699,35 +706,35 @@ func processClass (cdef: JGodotExtensionAPIClass, outputDir: String?) async {
             }
             """)
         }
-        
+
         var referencedMethods = Set<String>()
-        
+
         if let enums = cdef.enums {
             generateEnums (p, cdef: cdef, values: enums, prefix: nil)
         }
-        
+
         let oResult = p.result
-        
+
         if let constants = cdef.constants {
             generateConstants (p, cdef: cdef, constants)
         }
-        
+
         if let properties = cdef.properties {
             generateProperties (p, cdef: cdef, properties, cdef.methods ?? [], &referencedMethods, asSingleton: asSingleton)
         }
         if let methods = cdef.methods {
             virtuals = generateMethods (p, cdef: cdef, methods: methods, usedMethods: referencedMethods, asSingleton: asSingleton)
         }
-        
+
         if inherits == objectInherits {
             p.staticProperty(isStored: true, name: "variantFromSelf", type: "GDExtensionVariantFromTypeConstructorFunc") {
                 p("gi.get_variant_from_type_constructor(GDEXTENSION_VARIANT_TYPE_OBJECT)!")
             }
-            
+
             p.staticProperty(isStored: true, name: "selfFromVariant", type: "GDExtensionTypeFromVariantConstructorFunc") {
                 p("gi.get_variant_to_type_constructor(GDEXTENSION_VARIANT_TYPE_OBJECT)!")
             }
-            
+
             p("""
             /// Wrap ``\(cdef.name)`` into a ``Variant``
             @inline(__always)
@@ -790,19 +797,19 @@ func processClass (cdef: JGodotExtensionAPIClass, outputDir: String?) async {
             }
             """)
         }
-        
+
         if cdef.name == "RefCounted" {
             p("/// Internal API")
             p("public final override func _macroRcRef()") {
                 p("reference()")
             }
-            
+
             p("/// Internal API")
             p("public final override func _macroRcUnref()") {
                 p("unreference()")
             }
         }
-        
+
         if let signals = cdef.signals {
             generateSignals (p, cdef: cdef, signals: signals)
         }
@@ -841,7 +848,7 @@ extension Generator {
                 p.staticProperty(isStored: true, name: fromType, type: "GDExtensionVariantFromTypeConstructorFunc") {
                     p("gi.get_variant_from_type_constructor(\(type))!")
                 }
-                
+
                 p.staticProperty(isStored: true, name: fromVariant, type: "GDExtensionTypeFromVariantConstructorFunc") {
                     p("gi.get_variant_to_type_constructor(\(type))!")
                 }
