@@ -464,6 +464,7 @@ let core: [String] = [
     "DTLSServer.swift",
     "DirAccess.swift",
     "DisplayServer.swift",
+    "DisplayServerLibrary.swift",
     "ENetConnection.swift",
     "ENetMultiplayerPeer.swift",
     "ENetPacketPeer.swift",
