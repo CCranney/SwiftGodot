@@ -167693,18 +167693,6 @@
 					"description": ""
 				},
 				{
-					"name": "is_session_active",
-					"is_const": true,
-					"is_vararg": false,
-					"is_static": false,
-					"is_virtual": false,
-					"hash": 36873697,
-					"return_value": {
-						"type": "bool"
-					},
-					"description": ""
-				},
-				{
 					"name": "is_presenting_frames",
 					"is_const": true,
 					"is_vararg": false,
