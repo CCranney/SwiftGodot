@@ -167570,6 +167570,55 @@
 			"is_instantiable": false,
 			"inherits": "RefCounted",
 			"api_type": "core",
+			"enums": [
+				{
+					"name": "SpatialEventPhase",
+					"is_bitfield": false,
+					"values": [
+						{
+							"name": "SPATIAL_EVENT_PHASE_UNKNOWN",
+							"value": 0,
+							"description": ""
+						},
+						{
+							"name": "SPATIAL_EVENT_PHASE_ACTIVE",
+							"value": 1,
+							"description": ""
+						},
+						{
+							"name": "SPATIAL_EVENT_PHASE_CANCELLED",
+							"value": 2,
+							"description": ""
+						},
+						{
+							"name": "SPATIAL_EVENT_PHASE_ENDED",
+							"value": 3,
+							"description": ""
+						}
+					]
+				},
+				{
+					"name": "SpatialEventChirality",
+					"is_bitfield": false,
+					"values": [
+						{
+							"name": "SPATIAL_EVENT_CHIRALITY_NONE",
+							"value": 0,
+							"description": ""
+						},
+						{
+							"name": "SPATIAL_EVENT_CHIRALITY_LEFT",
+							"value": 1,
+							"description": ""
+						},
+						{
+							"name": "SPATIAL_EVENT_CHIRALITY_RIGHT",
+							"value": 2,
+							"description": ""
+						}
+					]
+				}
+			],
 			"methods": [
 				{
 					"name": "create",
@@ -167665,6 +167714,41 @@
 					"return_value": {
 						"type": "bool"
 					},
+					"description": ""
+				},
+				{
+					"name": "submit_spatial_event",
+					"is_const": false,
+					"is_vararg": false,
+					"is_static": false,
+					"is_virtual": false,
+					"hash": 2721973208,
+					"arguments": [
+						{
+							"name": "phase",
+							"type": "enum::LibgodotCompositorServicesController.SpatialEventPhase"
+						},
+						{
+							"name": "chirality",
+							"type": "enum::LibgodotCompositorServicesController.SpatialEventChirality"
+						},
+						{
+							"name": "hand_pose",
+							"type": "Transform3D"
+						},
+						{
+							"name": "has_selection_ray",
+							"type": "bool"
+						},
+						{
+							"name": "selection_ray_origin",
+							"type": "Vector3"
+						},
+						{
+							"name": "selection_ray_direction",
+							"type": "Vector3"
+						}
+					],
 					"description": ""
 				}
 			],
