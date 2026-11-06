@@ -167645,6 +167645,19 @@
 					"description": ""
 				},
 				{
+					"name": "create_immersive_window",
+					"is_const": false,
+					"is_vararg": false,
+					"is_static": false,
+					"is_virtual": false,
+					"hash": 2455072627,
+					"return_value": {
+						"type": "int",
+						"meta": "int64"
+					},
+					"description": ""
+				},
+				{
 					"name": "begin_session",
 					"is_const": false,
 					"is_vararg": false,
